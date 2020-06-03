@@ -142,8 +142,11 @@ func TestGetUpdatedProducts(t *testing.T) {
     response := executeRequest(req)
 
     checkResponseCode(t, http.StatusOK, response.Code)
-    var m map[string]interface{}
-    json.Unmarshal(response.Body.Bytes(), &m)
+    var arr []string
+    _ = json.Unmarshal(response.Body.Bytes(), &arr)
+    if len(arr)!=5{
+        t.Errorf("Expected to receive 5 products")
+    }
 
 }
 
@@ -196,12 +199,6 @@ func TestUpdateProduct(t *testing.T) {
     response = executeRequest(req)
 
     checkResponseCode(t, http.StatusOK, response.Code)
-
-    // req, _ := http.NewRequest("GET", "/product/1", nil)
-    // response := executeRequest(req)
-
-    // checkResponseCode(t, http.StatusOK, response.Code)
-
 
     var m map[string]interface{}
     json.Unmarshal(response.Body.Bytes(), &m)
