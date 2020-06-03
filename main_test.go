@@ -163,6 +163,12 @@ func TestUpdateProduct(t *testing.T) {
 
     checkResponseCode(t, http.StatusOK, response.Code)
 
+    // req, _ := http.NewRequest("GET", "/product/1", nil)
+    // response := executeRequest(req)
+
+    // checkResponseCode(t, http.StatusOK, response.Code)
+
+
     var m map[string]interface{}
     json.Unmarshal(response.Body.Bytes(), &m)
 
@@ -207,15 +213,15 @@ func TestUpdateProductOutdated(t *testing.T) {
         t.Errorf("Expected the id to remain the same (%v). Got %v", originalProduct["id"], m["id"])
     }
 
-    if m["name"] == originalProduct["name"] {
+    if m["name"] != originalProduct["name"] {
         t.Errorf("Expected the name to change from '%v' to '%v'. Got '%v'", originalProduct["name"], m["name"], m["name"])
     }
 
-    if m["price"] == originalProduct["price"] {
+    if m["price"] != originalProduct["price"] {
         t.Errorf("Expected the price to change from '%v' to '%v'. Got '%v'", originalProduct["price"], m["price"], m["price"])
     }
 
-    if m["changed"] == originalProduct["changed"] {
+    if m["changed"] != originalProduct["changed"] {
         t.Errorf("Expected the changed to change from '%v' to '%v'. Got '%v'", originalProduct["changed"], m["changed"], m["changed"])
     }
 }
