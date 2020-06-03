@@ -18,10 +18,9 @@ var a App
 
 func TestMain(m *testing.M) {
     a.Initialize(
-        os.Getenv("APP_DB_USERNAME"),
-        os.Getenv("APP_DB_PASSWORD"),
-        os.Getenv("APP_DB_NAME"))
-
+		"test",
+		"test",
+		"test")
     ensureTableExists()
     code := m.Run()
     clearTable()
@@ -44,6 +43,7 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS products
     id SERIAL,
     name TEXT NOT NULL,
     price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    changed INTEGER,
     CONSTRAINT products_pkey PRIMARY KEY (id)
 )`
 
@@ -97,7 +97,7 @@ func TestCreateProduct(t *testing.T) {
 
     clearTable()
 
-    var jsonStr = []byte(`{"name":"test product", "price": 11.22}`)
+    var jsonStr = []byte(`{"name":"test product", "price": 11.22, "changed":1}`)
     req, _ := http.NewRequest("POST", "/product", bytes.NewBuffer(jsonStr))
     req.Header.Set("Content-Type", "application/json")
 
@@ -140,7 +140,7 @@ func addProducts(count int) {
     }
 
     for i := 0; i < count; i++ {
-        a.DB.Exec("INSERT INTO products(name, price) VALUES($1, $2)", "Product "+strconv.Itoa(i), (i+1.0)*10)
+        a.DB.Exec("INSERT INTO products(name, price, change) VALUES($1, $2, $3)", "Product "+strconv.Itoa(i), (i+1.0)*10, 3)
     }
 }
 
@@ -155,7 +155,7 @@ func TestUpdateProduct(t *testing.T) {
     var originalProduct map[string]interface{}
     json.Unmarshal(response.Body.Bytes(), &originalProduct)
 
-    var jsonStr = []byte(`{"name":"test product - updated name", "price": 11.22}`)
+    var jsonStr = []byte(`{"name":"test product - updated name", "price": 11.22 "changed": 999}`)
     req, _ = http.NewRequest("PUT", "/product/1", bytes.NewBuffer(jsonStr))
     req.Header.Set("Content-Type", "application/json")
 
