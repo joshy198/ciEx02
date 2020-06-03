@@ -19,9 +19,10 @@ func (p *product) getProduct(db *sql.DB) error {
       p.ID).Scan(&p.Name, &p.Price, &p.Changed)
 }
 
+// update products set name = $1, price=$2, changed=$4 WHERE id=$3 AND changed < $4;
 func (p *product) updateProduct(db *sql.DB) error {
   _, err :=
-      db.Exec("UPDATE products SET name=$1, price=$2, changed=$4 WHERE id=$3 and changed < $4",
+      db.Exec("UPDATE products SET name=$1, price=$2, changed=$4 WHERE id=$3 AND changed < $4 RETURNING id, name, price, changed",
           p.Name, p.Price, p.ID, p.Changed)
 
   return err
