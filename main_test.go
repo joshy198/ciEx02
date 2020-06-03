@@ -42,6 +42,7 @@ const tableCreationQuery = `CREATE TABLE IF NOT EXISTS products
 (
     id SERIAL,
     name TEXT NOT NULL,
+    description TEXT,
     price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     changed INTEGER,
     CONSTRAINT products_pkey PRIMARY KEY (id)
@@ -97,7 +98,7 @@ func TestCreateProduct(t *testing.T) {
 
     clearTable()
 
-    var jsonStr = []byte(`{"name":"test product", "price": 11.22, "changed":1}`)
+    var jsonStr = []byte(`{"name":"test product", "description":"descript", "price": 11.22, "changed":1}`)
     req, _ := http.NewRequest("POST", "/product", bytes.NewBuffer(jsonStr))
     req.Header.Set("Content-Type", "application/json")
 
@@ -133,6 +134,19 @@ func TestGetProduct(t *testing.T) {
     checkResponseCode(t, http.StatusOK, response.Code)
 }
 
+func TestGetUpdatedProducts(t *testing.T) {
+    clearTable()
+    addProducts(5)
+
+    req, _ := http.NewRequest("GET", "/products/3", nil)
+    response := executeRequest(req)
+
+    checkResponseCode(t, http.StatusOK, response.Code)
+    var m map[string]interface{}
+    json.Unmarshal(response.Body.Bytes(), &m)
+
+}
+
 
 func addProducts(count int) {
     if count < 1 {
@@ -140,10 +154,30 @@ func addProducts(count int) {
     }
 
     for i := 0; i < count; i++ {
-        a.DB.Exec("INSERT INTO products(name, price, changed) VALUES($1, $2, $3)", "Product "+strconv.Itoa(i), (i+1.0)*10, 5)
+        a.DB.Exec("INSERT INTO products(name, description, price, changed) VALUES($1, $2, $3, $4)", "Product "+strconv.Itoa(i),"", (i+1.0)*10, 5)
     }
 }
 
+
+func TestDeleteProduct(t *testing.T) {
+    clearTable()
+    addProducts(1)
+
+    req, _ := http.NewRequest("GET", "/product/1", nil)
+    response := executeRequest(req)
+    checkResponseCode(t, http.StatusOK, response.Code)
+
+    req, _ = http.NewRequest("DELETE", "/product/1", nil)
+    response = executeRequest(req)
+
+    checkResponseCode(t, http.StatusOK, response.Code)
+
+    req, _ = http.
+    
+    NewRequest("GET", "/product/1", nil)
+    response = executeRequest(req)
+    checkResponseCode(t, http.StatusNotFound, response.Code)
+}
 
 func TestUpdateProduct(t *testing.T) {
 
@@ -155,7 +189,7 @@ func TestUpdateProduct(t *testing.T) {
     var originalProduct map[string]interface{}
     json.Unmarshal(response.Body.Bytes(), &originalProduct)
 
-    var jsonStr = []byte(`{"name":"test product - updated name", "price": 11.22, "changed": 999}`)
+    var jsonStr = []byte(`{"name":"test product - updated name", "description":"updated descript", "price": 11.22, "changed": 999}`)
     req, _ = http.NewRequest("PUT", "/product/1", bytes.NewBuffer(jsonStr))
     req.Header.Set("Content-Type", "application/json")
 
@@ -186,6 +220,9 @@ func TestUpdateProduct(t *testing.T) {
     if m["changed"] == originalProduct["changed"] {
         t.Errorf("Expected the changed to change from '%v' to '%v'. Got '%v'", originalProduct["changed"], m["changed"], m["changed"])
     }
+    if m["description"] == originalProduct["description"] {
+        t.Errorf("Expected the changed to change from '%v' to '%v'. Got '%v'", originalProduct["description"], m["description"], m["description"])
+    }
 }
 
 func TestUpdateProductOutdated(t *testing.T) {
@@ -198,7 +235,7 @@ func TestUpdateProductOutdated(t *testing.T) {
     var originalProduct map[string]interface{}
     json.Unmarshal(response.Body.Bytes(), &originalProduct)
 
-    var jsonStr = []byte(`{"name":"test product - updated name", "price": 11.22, "changed": 1}`)
+    var jsonStr = []byte(`{"name":"test product - updated name", "description":"updated descript", "price": 11.22, "changed": 1}`)
     req, _ = http.NewRequest("PUT", "/product/1", bytes.NewBuffer(jsonStr))
     req.Header.Set("Content-Type", "application/json")
 
@@ -210,39 +247,21 @@ func TestUpdateProductOutdated(t *testing.T) {
     json.Unmarshal(response.Body.Bytes(), &m)
 
     if m["id"] != originalProduct["id"] {
-        t.Errorf("Expected the id to remain the same (%v). Got %v", originalProduct["id"], m["id"])
+        t.Errorf("Expected the id not to remain the same (%v). Got %v", originalProduct["id"], m["id"])
     }
 
     if m["name"] != originalProduct["name"] {
-        t.Errorf("Expected the name to change from '%v' to '%v'. Got '%v'", originalProduct["name"], m["name"], m["name"])
+        t.Errorf("Expected the name not to change from '%v' to '%v'. Got '%v'", originalProduct["name"], m["name"], m["name"])
     }
 
     if m["price"] != originalProduct["price"] {
-        t.Errorf("Expected the price to change from '%v' to '%v'. Got '%v'", originalProduct["price"], m["price"], m["price"])
+        t.Errorf("Expected the price not to change from '%v' to '%v'. Got '%v'", originalProduct["price"], m["price"], m["price"])
     }
 
     if m["changed"] != originalProduct["changed"] {
-        t.Errorf("Expected the changed to change from '%v' to '%v'. Got '%v'", originalProduct["changed"], m["changed"], m["changed"])
+        t.Errorf("Expected the changed not to change from '%v' to '%v'. Got '%v'", originalProduct["changed"], m["changed"], m["changed"])
     }
-}
-
-
-func TestDeleteProduct(t *testing.T) {
-    clearTable()
-    addProducts(1)
-
-    req, _ := http.NewRequest("GET", "/product/1", nil)
-    response := executeRequest(req)
-    checkResponseCode(t, http.StatusOK, response.Code)
-
-    req, _ = http.NewRequest("DELETE", "/product/1", nil)
-    response = executeRequest(req)
-
-    checkResponseCode(t, http.StatusOK, response.Code)
-
-    req, _ = http.
-    
-    NewRequest("GET", "/product/1", nil)
-    response = executeRequest(req)
-    checkResponseCode(t, http.StatusNotFound, response.Code)
+    if m["description"] != originalProduct["description"] {
+        t.Errorf("Expected the description not to change from '%v' to '%v'. Got '%v'", originalProduct["description"], m["description"], m["description"])
+    }
 }

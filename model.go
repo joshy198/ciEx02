@@ -10,20 +10,20 @@ import (
 type product struct {
     ID    int     `json:"id"`
     Name  string  `json:"name"`
+    Description string `json:"description"`
     Price float64 `json:"price"`
     Changed int   `json:"changed"`
 }
 
 func (p *product) getProduct(db *sql.DB) error {
-  return db.QueryRow("SELECT name, price, changed FROM products WHERE id=$1",
-      p.ID).Scan(&p.Name, &p.Price, &p.Changed)
+  return db.QueryRow("SELECT name, description, price, changed FROM products WHERE id=$1",
+      p.ID).Scan(&p.Name, &p.Description, &p.Price, &p.Changed)
 }
 
 func (p *product) updateProduct(db *sql.DB) error {
-    db.Exec("UPDATE products SET name=$1, price=$2, changed=$4 WHERE id=$3 AND changed < $4",
-          p.Name, p.Price, p.ID, p.Changed)
-    return db.QueryRow("SELECT name, price, changed FROM products WHERE id=$1",
-          p.ID).Scan(&p.Name, &p.Price, &p.Changed)
+    db.Exec("UPDATE products SET name=$2, description=$3, price=$4, changed=$5 WHERE id=$1 AND changed < $5",
+    p.ID, p.Name, p.Description, p.Price, p.Changed)
+    return p.getProduct(db);
 }
 
 func (p *product) deleteProduct(db *sql.DB) error {
@@ -34,8 +34,8 @@ func (p *product) deleteProduct(db *sql.DB) error {
 
 func (p *product) createProduct(db *sql.DB) error {
   err := db.QueryRow(
-      "INSERT INTO products(name, price, changed) VALUES($1, $2, $3) RETURNING id",
-      p.Name, p.Price, p.Changed).Scan(&p.ID)
+      "INSERT INTO products(name, description, price, changed) VALUES($1, $2, $3, $4) RETURNING id",
+      p.Name, p.Description, p.Price, p.Changed).Scan(&p.ID)
 
   if err != nil {
       return err
@@ -46,7 +46,7 @@ func (p *product) createProduct(db *sql.DB) error {
 
 func getProducts(db *sql.DB, start, count int) ([]product, error) {
   rows, err := db.Query(
-      "SELECT id, name, price, changed FROM products LIMIT $1 OFFSET $2",
+      "SELECT id, name, description, price, changed FROM products LIMIT $1 OFFSET $2",
       count, start)
 
   if err != nil {
@@ -59,7 +59,7 @@ func getProducts(db *sql.DB, start, count int) ([]product, error) {
 
   for rows.Next() {
       var p product
-      if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Changed); err != nil {
+      if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Changed); err != nil {
           return nil, err
       }
       products = append(products, p)
@@ -70,7 +70,7 @@ func getProducts(db *sql.DB, start, count int) ([]product, error) {
 
 func getChangedProducts(db *sql.DB, change int) ([]product, error) {
   rows, err := db.Query(
-      "SELECT id, name, price, changed FROM products WHERE change >= $1",
+      "SELECT id, name, description, price, changed FROM products WHERE changed >= $1",
       change)
 
   if err != nil {
@@ -83,7 +83,7 @@ func getChangedProducts(db *sql.DB, change int) ([]product, error) {
 
   for rows.Next() {
       var p product
-      if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Changed); err != nil {
+      if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.Changed); err != nil {
           return nil, err
       }
       products = append(products, p)
