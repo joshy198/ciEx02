@@ -103,8 +103,8 @@ func (a *App) getProducts(w http.ResponseWriter, r *http.Request) {
 func (a *App) getChangedProducts(w http.ResponseWriter, r *http.Request) {
     changed, _ := strconv.Atoi(r.FormValue("changed"))
 
-    if start < 0 {
-        start = 0
+    if changed < 0 {
+        changed = 0
     }
 
     products, err := getChangedProducts(a.DB, changed)

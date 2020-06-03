@@ -60,7 +60,7 @@ func getProducts(db *sql.DB, start, count int) ([]product, error) {
 
   for rows.Next() {
       var p product
-      if err := rows.Scan(&p.ID, &p.Name, &p.Price, %p.Changed); err != nil {
+      if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Changed); err != nil {
           return nil, err
       }
       products = append(products, p)
@@ -84,7 +84,7 @@ func getChangedProducts(db *sql.DB, change int) ([]product, error) {
 
   for rows.Next() {
       var p product
-      if err := rows.Scan(&p.ID, &p.Name, &p.Price, %p.Changed); err != nil {
+      if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Changed); err != nil {
           return nil, err
       }
       products = append(products, p)
