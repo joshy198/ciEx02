@@ -1,0 +1,10 @@
+os: linux
+language: go
+go:
+    - 1.14.x
+    
+services:
+    - postgres
+
+script:
+    - go test -v ./...
