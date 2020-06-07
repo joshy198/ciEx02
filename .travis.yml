@@ -5,7 +5,9 @@ go:
     
 services:
     - postgres
-
+before_script:
+  - PSQL -c 'create user test WITH PASSWPRD "test"' -U postgres
+  - psql -c 'create database test;' -U postgres
 script:
     - go test -v
     
